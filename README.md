@@ -13,7 +13,7 @@ Pikinni is a lightweight and easy-to-use library for parsing INI configuration f
 
 ### Installation
 
-Clone this repository to your machine and include the source code in your .NET projects:
+Clone this repository to your machine and include the source code in your .NET projects.
 
 ### Usage
 

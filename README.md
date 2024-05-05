@@ -1,6 +1,10 @@
-# Pikinni INI Parser
+# Pikinni - INI File Handler for .NET
 
-Pikinni is a lightweight and easy-to-use library for parsing INI configuration files in .NET applications. It offers a straightforward API that allows you to access, modify, and manage the contents of INI files efficiently.
+## Overview
+
+Pikinni is a lightweight .NET library designed to manipulate and handle INI files.
+This library allows easy access to INI file sections and properties, supporting
+operations likereading, modifying, and saving configurations.
 
 ## Features
 
@@ -34,6 +38,8 @@ string globalValue = myIni.Global["propertyName"];
 string sectionValue = myIni["SectionName"]["propertyName"];
 ```
 
+**Note:** Properties which don't exist return empty string.
+
 #### Creating and Saving a New INI File
 
 ```
@@ -65,7 +71,9 @@ foreach (Ini.Section section in myIni)
 
 ## Contributing
 
-If you have any ideas, bug reports, or enhancements, please feel free to fork the repository, make changes, and submit a pull request. You can also create an issue to discuss modifications or additional features.
+If you have any ideas, bug reports, or enhancements, please feel free to fork the repository,
+make changes, and submit a pull request. You can also create an issue to discuss modifications
+or additional features.
 
 ## License
 

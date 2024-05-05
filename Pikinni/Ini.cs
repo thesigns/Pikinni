@@ -1,11 +1,12 @@
 ﻿using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace Pikinni
 {
     /// <summary>
     /// Represents an INI file, allowing access to its sections and properties.
     /// </summary>
-    public class Ini : IEnumerable<Ini.Section>
+    public partial class Ini : IEnumerable<Ini.Section>
     {
         /// <summary>
         /// Represents a section within an INI file, containing a set of properties.
@@ -51,6 +52,9 @@ namespace Pikinni
         /// </summary>
         public Section Global { get; init; } = new Section("Global");
 
+        /// <summary>
+        /// Named sections of the INI file.
+        /// </summary>
         private Dictionary<string, Section> Sections { get; init; } = new Dictionary<string, Section>();
 
         /// <summary>
@@ -83,6 +87,16 @@ namespace Pikinni
             ParseIniData(source);
         }
 
+        /// <summary>
+        /// Parses the INI file content and populates the INI object.
+        /// </summary>
+        /// <param name="source">The string content of an INI file.</param>
+        /// <remarks>
+        /// This method splits the input string into lines and processes each line to determine whether it
+        /// represents a section header, a property, or a comment. Section headers are added to the Sections
+        /// dictionary, and properties are added under the appropriate section. Lines that are recognized as
+        /// comments or that do not contain an equal sign ('=') are ignored.
+        /// </remarks>
         private void ParseIniData(string source)
         {
             var splitSeparator = new[] { "\r\n", "\n" };
@@ -100,11 +114,16 @@ namespace Pikinni
                     continue;
                 }
                 if (line.StartsWith(';') || line.StartsWith('#') || !line.Contains('='))
+                {
                     continue;
-
+                }
                 var equalSignPosition = line.IndexOf('=');
                 var propertyName = line[..equalSignPosition].Trim();
                 var value = line[(equalSignPosition + 1)..].Trim();
+
+                value = value.Replace(@"\\", @"\").Replace(@"\r", "\r").Replace(@"\n", "\n").Replace(@"\t", "\t").Replace(@"\s", " ");
+
+
                 currentSection[propertyName] = value;
             }
         }
@@ -138,20 +157,16 @@ namespace Pikinni
             {
                 throw new ArgumentException("File name cannot be null or whitespace.", nameof(fileName));
             }
-
             try
             {
-                // Convert the current INI object to its string representation and write it to the specified file.
                 File.WriteAllText(fileName, ToString());
             }
             catch (IOException ex)
             {
-                // Log or handle I/O exceptions as needed.
                 throw new IOException($"An error occurred while writing to the file: {fileName}", ex);
             }
             catch (UnauthorizedAccessException ex)
             {
-                // Handle exceptions related to access permissions.
                 throw new UnauthorizedAccessException("Check your access permissions for the file path provided.", ex);
             }
         }
@@ -185,7 +200,7 @@ namespace Pikinni
 
             foreach (var property in Global.Properties)
             {
-                source += $"{property.Key} = {property.Value}\n";
+                source += $"{property.Key} = {Escape(property.Value)}\n";
             }
             foreach (var section in this)
             {
@@ -193,11 +208,37 @@ namespace Pikinni
                 source += $"[{section.Name}]\n";
                 foreach (var property in section.Properties)
                 {
-                    source += $"{property.Key} = {property.Value}\n";
+                    source += $"{property.Key} = {Escape(property.Value)}\n";
                 }
             }
             return source;
         }
+
+        /// <summary>
+        /// Escapes special characters in a given text string to ensure that the text is safe for use in an INI file.
+        /// </summary>
+        /// <param name="text">The text to escape.</param>
+        /// <returns>The escaped text string.</returns>
+        private static string Escape(string text)
+        {
+            text = text.Replace(@"\", @"\\").Replace("\r", @"\r").Replace("\n", @"\n").Replace("\t", @"\t");
+            text = RegexSpaces().Replace(text, m => RegexSingleSpace().Replace(m.Value, @"\s"));
+            return text;
+        }
+
+        /// <summary>
+        /// Compiled regex to match spaces at the start and end of a string.
+        /// </summary>
+        /// <returns>A Regex that matches leading and trailing spaces.</returns>
+        [GeneratedRegex(@"(^ +| +$)", RegexOptions.Compiled)]
+        private static partial Regex RegexSpaces();
+
+        /// <summary>
+        /// Compiled regex to match single spaces for replacement.
+        /// </summary>
+        /// <returns>A Regex that matches single space characters.</returns>
+        [GeneratedRegex(" ", RegexOptions.Compiled)]
+        private static partial Regex RegexSingleSpace();
 
     }
 }
